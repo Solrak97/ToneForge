@@ -49,7 +49,16 @@ npm run build
 
 Gen 3 parameter metadata lives in [`crates/toneforge-core/data/gen3_address_map.json`](crates/toneforge-core/data/gen3_address_map.json).
 
-To import a richer map from Boss Tone Studio, export `address_map.js` into the BTS JSON format supported by `AddressMap::from_bts_export()` (see fixture in `crates/toneforge-core/tests/fixtures/gen3_bts_export.json`).
+Regenerate from a local Boss Tone Studio install:
+
+```bash
+npm run export:map
+# or: node tools/export-bts-map.mjs "/path/to/address_map.js"
+```
+
+Each parameter includes `wired: true|false` — only wired params are read/written over SysEx today. The rest are catalogued placeholders ready to enable.
+
+To import a richer map from Boss Tone Studio manually, export into the BTS JSON format supported by `AddressMap::from_bts_export()` (see fixture in `crates/toneforge-core/tests/fixtures/gen3_bts_export.json`).
 
 ## Architecture
 

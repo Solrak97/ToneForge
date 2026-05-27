@@ -3,6 +3,7 @@ use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnec
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 use toneforge_core::sysex::RolandSysExCodec;
+use tracing::{debug, info, warn};
 
 pub struct MidiTransport {
     input: Option<MidiInputConnection<()>>,
@@ -41,6 +42,7 @@ impl MidiTransport {
             .collect();
         names.sort();
         names.dedup();
+        debug!(count = names.len(), ports = ?names, "MIDI port scan complete");
         Ok(names)
     }
 
@@ -97,6 +99,7 @@ impl MidiTransport {
             .connect(&output_port, "toneforge-output")
             .map_err(|e| DeviceError::Midi(e.to_string()))?;
 
+        info!(port = %port_name, "MIDI transport connected");
         Ok(Self {
             input: Some(input),
             output: Some(output),
@@ -114,6 +117,7 @@ impl MidiTransport {
             .output
             .as_mut()
             .ok_or(DeviceError::NotConnected)?;
+        debug!(bytes = data.len(), sysex = %hex_sysex(data), "MIDI TX");
         output
             .send(data)
             .map_err(|e| DeviceError::Midi(e.to_string()))
@@ -130,9 +134,11 @@ impl MidiTransport {
         let deadline = Instant::now() + timeout;
         loop {
             if let Some(response) = self.wait_sysex(deadline)? {
+                debug!(bytes = response.len(), sysex = %hex_sysex(&response), "MIDI RX response");
                 return Ok(response);
             }
             if Instant::now() >= deadline {
+                warn!("MIDI request_response timed out");
                 return Err(DeviceError::Timeout);
             }
         }
@@ -153,13 +159,23 @@ impl MidiTransport {
 
         while Instant::now() < deadline {
             if let Some(frame) = self.wait_sysex(deadline)? {
+                debug!(bytes = frame.len(), sysex = %hex_sysex(&frame), "MIDI RX chunk");
                 if let Some(block) = assembler.feed(&frame)? {
+                    info!(block_bytes = block.len(), "MIDI patch block assembled");
                     return Ok(block);
                 }
             }
         }
 
+        warn!("MIDI request_block timed out");
         Err(DeviceError::Timeout)
+    }
+
+    /// Universal Device Identity Inquiry (not Roland DT1/RQ1).
+    pub fn query_identity(&mut self, timeout: Duration) -> Result<Option<u8>, DeviceError> {
+        const IDENTITY_REQUEST: [u8; 6] = [0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7];
+        let response = self.request_response(&IDENTITY_REQUEST, timeout)?;
+        Ok(parse_identity_model_code(&response))
     }
 
     fn clear_inbox(&self) {
@@ -199,6 +215,27 @@ impl Drop for MidiTransport {
 pub fn is_katana_candidate(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     lower.contains("katana") || lower.contains("boss")
+}
+
+fn parse_identity_model_code(response: &[u8]) -> Option<u8> {
+    if response.len() < 11 {
+        return None;
+    }
+    if response.first() != Some(&0xF0)
+        || response.get(3) != Some(&0x06)
+        || response.get(4) != Some(&0x02)
+    {
+        return None;
+    }
+    // Boss Tone Studio reads the model id from this byte in the identity reply.
+    response.get(10).copied()
+}
+
+fn hex_sysex(data: &[u8]) -> String {
+    data.iter()
+        .map(|b| format!("{b:02X}"))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 pub fn encode_scalar(value: u32) -> [u8; 4] {

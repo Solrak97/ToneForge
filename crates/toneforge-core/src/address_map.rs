@@ -23,11 +23,20 @@ pub struct ParamDef {
     #[serde(default)]
     pub max: Option<i32>,
     #[serde(default)]
-    pub default: Option<u8>,
+    pub default: Option<i32>,
     #[serde(default)]
     pub group: Option<String>,
     #[serde(default)]
     pub options: Vec<String>,
+    /// When true, ToneForge reads/writes this parameter over SysEx today.
+    #[serde(default)]
+    pub wired: bool,
+    /// Original Boss Tone Studio parameter id (PRMID_*).
+    #[serde(default)]
+    pub bts_name: Option<String>,
+    /// Memory region: live_panel, patch_memory, etc.
+    #[serde(default)]
+    pub address_space: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -36,6 +45,8 @@ pub struct AddressMap {
     pub device_model: String,
     #[serde(deserialize_with = "deserialize_device_id")]
     pub device_id: Vec<u8>,
+    #[serde(default)]
+    pub live_panel_base: Option<String>,
     pub patch_query: PatchQueryDef,
     pub params: Vec<ParamDef>,
 }
@@ -44,6 +55,10 @@ pub struct AddressMap {
 pub struct PatchQueryDef {
     #[serde(deserialize_with = "deserialize_address")]
     pub current_channel_address: [u8; 4],
+    #[serde(default = "default_patch_select_address", deserialize_with = "deserialize_address")]
+    pub patch_select_address: [u8; 4],
+    #[serde(default = "default_channel_count")]
+    pub channel_count: u8,
     #[serde(deserialize_with = "deserialize_address")]
     pub patch_data_address: [u8; 4],
     pub patch_data_length: u32,
@@ -62,6 +77,10 @@ impl AddressMap {
             .iter()
             .filter(|p| p.group.as_deref() == Some(group))
             .collect()
+    }
+
+    pub fn wired_params(&self) -> Vec<&ParamDef> {
+        self.params.iter().filter(|p| p.wired).collect()
     }
 
     pub fn from_json_str(raw: &str) -> Result<Self, CoreError> {
@@ -88,6 +107,10 @@ impl AddressMap {
         #[derive(Deserialize)]
         struct ExportPatchQuery {
             current_channel_address: String,
+            #[serde(default)]
+            patch_select_address: Option<String>,
+            #[serde(default)]
+            channel_count: Option<u8>,
             patch_data_address: String,
             patch_data_length: u32,
             editor_mode_address: String,
@@ -105,7 +128,7 @@ impl AddressMap {
             #[serde(default)]
             max: Option<i32>,
             #[serde(default)]
-            default: Option<u8>,
+            default: Option<i32>,
             #[serde(default)]
             group: Option<String>,
             #[serde(default)]
@@ -117,8 +140,17 @@ impl AddressMap {
             device_family: export.device_family,
             device_model: export.device_model,
             device_id: parse_hex_bytes(&export.device_id)?,
+            live_panel_base: None,
             patch_query: PatchQueryDef {
                 current_channel_address: parse_address(&export.patch_query.current_channel_address)?,
+                patch_select_address: export
+                    .patch_query
+                    .patch_select_address
+                    .as_deref()
+                    .map(parse_address)
+                    .transpose()?
+                    .unwrap_or_else(default_patch_select_address),
+                channel_count: export.patch_query.channel_count.unwrap_or_else(default_channel_count),
                 patch_data_address: parse_address(&export.patch_query.patch_data_address)?,
                 patch_data_length: export.patch_query.patch_data_length,
                 editor_mode_address: parse_address(&export.patch_query.editor_mode_address)?,
@@ -138,11 +170,22 @@ impl AddressMap {
                         default: p.default,
                         group: p.group,
                         options: p.options,
+                        wired: true,
+                        bts_name: None,
+                        address_space: None,
                     })
                 })
                 .collect::<Result<Vec<_>, CoreError>>()?,
         })
     }
+}
+
+fn default_patch_select_address() -> [u8; 4] {
+    [0x7F, 0x00, 0x01, 0x00]
+}
+
+fn default_channel_count() -> u8 {
+    9
 }
 
 fn parse_hex_bytes(input: &str) -> Result<Vec<u8>, CoreError> {
@@ -237,7 +280,7 @@ mod tests {
         let map = AddressMap::from_json_str(include_str!("../data/gen3_address_map.json"))
             .expect("embedded map");
         assert_eq!(map.device_model, "katana-gen3");
-        assert!(map.param_by_id("amp_gain").is_some());
+        assert!(map.param_by_id("patch_amp_gain").is_some());
     }
 
     #[test]

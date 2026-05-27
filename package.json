@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "export:map": "node tools/export-bts-map.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

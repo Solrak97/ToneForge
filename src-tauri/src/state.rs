@@ -1,7 +1,8 @@
 use std::sync::Mutex;
 use toneforge_core::address_map::ParamDef;
-use toneforge_core::preset::{Patch, PresetFile};
+use toneforge_core::preset::{ParamValue, Patch, PresetFile};
 use toneforge_devices::{DeviceDriver, DeviceInfo, KatanaGen3Driver};
+use tracing::warn;
 
 #[derive(Default)]
 pub struct AppState {
@@ -47,6 +48,7 @@ impl AppState {
             }
             Err(err) => {
                 let message = err.to_string();
+                warn!(error = %message, "driver operation failed");
                 inner.last_error = Some(message.clone());
                 Err(message)
             }
@@ -83,6 +85,16 @@ impl AppState {
         Ok(())
     }
 
+    pub fn apply_param_write(&self, param_id: &str, value: u8) -> Result<Patch, String> {
+        let mut inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
+        let patch = inner
+            .last_patch
+            .as_mut()
+            .ok_or_else(|| "no patch loaded; read from device first".to_string())?;
+        patch.set_param(param_id, ParamValue::from_u8(value));
+        Ok(patch.clone())
+    }
+
     pub fn connection_status(&self) -> Result<ConnectionStatus, String> {
         let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
         Ok(inner.connection.clone())
@@ -105,6 +117,11 @@ impl AppState {
 
     pub fn list_devices(&self) -> Result<Vec<DeviceInfo>, String> {
         self.with_driver(|driver| driver.list_devices())
+    }
+
+    pub fn channels(&self) -> Result<Vec<toneforge_core::ChannelDef>, String> {
+        let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
+        Ok(inner.driver.channels().to_vec())
     }
 }
 

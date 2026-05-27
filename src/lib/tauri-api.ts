@@ -1,18 +1,33 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { save, open } from "@tauri-apps/plugin-dialog";
-import type { ConnectionStatus, DeviceInfo, ParamDef, Patch } from "../types/device";
+import type { ConnectionStatus, DeviceInfo, ParamDef, Patch, ChannelInfo } from "../types/device";
+import type { DebugLogEntry, LogLevel } from "../stores/debugLog";
+
+async function loggedInvoke<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const start = performance.now();
+  try {
+    const result = await fn();
+    console.debug(`[ToneForge] ${label} OK (${(performance.now() - start).toFixed(0)}ms)`);
+    return result;
+  } catch (err) {
+    console.error(`[ToneForge] ${label} FAILED (${(performance.now() - start).toFixed(0)}ms)`, err);
+    throw err;
+  }
+}
 
 export async function listDevices(): Promise<DeviceInfo[]> {
-  return invoke<DeviceInfo[]>("list_devices");
+  return loggedInvoke("listDevices", () => invoke<DeviceInfo[]>("list_devices"));
 }
 
 export async function connectDevice(portName: string): Promise<ConnectionStatus> {
-  return invoke<ConnectionStatus>("connect_device", { portName });
+  return loggedInvoke("connectDevice", () =>
+    invoke<ConnectionStatus>("connect_device", { portName }),
+  );
 }
 
 export async function disconnectDevice(): Promise<ConnectionStatus> {
-  return invoke<ConnectionStatus>("disconnect_device");
+  return loggedInvoke("disconnectDevice", () => invoke<ConnectionStatus>("disconnect_device"));
 }
 
 export async function getConnectionStatus(): Promise<ConnectionStatus> {
@@ -20,15 +35,31 @@ export async function getConnectionStatus(): Promise<ConnectionStatus> {
 }
 
 export async function readPatch(): Promise<Patch> {
-  return invoke<Patch>("read_patch");
+  return loggedInvoke("readPatch", () => invoke<Patch>("read_patch"));
+}
+
+export async function listChannels(): Promise<ChannelInfo[]> {
+  return invoke<ChannelInfo[]>("list_channels");
+}
+
+export async function selectChannel(channel: number): Promise<Patch> {
+  return loggedInvoke(`selectChannel(${channel})`, () =>
+    invoke<Patch>("select_channel", { channel }),
+  );
 }
 
 export async function setParam(paramId: string, value: number): Promise<Patch> {
-  return invoke<Patch>("set_param", { paramId, value });
+  return loggedInvoke(`setParam(${paramId}=${value})`, () =>
+    invoke<Patch>("set_param", { paramId, value }),
+  );
 }
 
 export async function listEditableParams(): Promise<ParamDef[]> {
   return invoke<ParamDef[]>("list_editable_params");
+}
+
+export async function getLogPath(): Promise<string> {
+  return invoke<string>("get_log_path");
 }
 
 export async function savePresetToDialog(): Promise<void> {
@@ -54,6 +85,7 @@ export async function loadPresetFromDialog(): Promise<Patch> {
 export function subscribeDeviceEvents(
   onConnection: (status: ConnectionStatus, error?: string | null) => void,
   onPatch: (patch: Patch) => void,
+  onDebugLog?: (entry: Omit<DebugLogEntry, "id">) => void,
 ) {
   const unsubs: Array<() => void> = [];
 
@@ -68,7 +100,30 @@ export function subscribeDeviceEvents(
     onPatch(event.payload.patch);
   }).then((unlisten) => unsubs.push(unlisten));
 
+  if (onDebugLog) {
+    listen<{
+      timestamp: string;
+      level: string;
+      target: string;
+      message: string;
+    }>("debug-log", (event) => {
+      onDebugLog({
+        timestamp: event.payload.timestamp,
+        level: normalizeLogLevel(event.payload.level),
+        target: event.payload.target,
+        message: event.payload.message,
+      });
+    }).then((unlisten) => unsubs.push(unlisten));
+  }
+
   return () => {
     unsubs.forEach((fn) => fn());
   };
+}
+
+function normalizeLogLevel(level: string): LogLevel {
+  if (level === "trace" || level === "debug" || level === "info" || level === "warn" || level === "error") {
+    return level;
+  }
+  return "info";
 }

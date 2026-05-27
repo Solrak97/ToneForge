@@ -145,6 +145,18 @@ impl RolandSysExCodec {
                 | (bytes[3] as u32),
         )
     }
+
+    /// Roland `INTEGER2x4` encoding (high nibble, low nibble).
+    pub fn encode_integer2x4(value: u8) -> [u8; 2] {
+        [(value >> 4) & 0x7F, value & 0x0F]
+    }
+
+    pub fn decode_integer2x4(bytes: &[u8]) -> Option<u8> {
+        if bytes.len() < 2 {
+            return None;
+        }
+        Some((bytes[0] << 4) | (bytes[1] & 0x0F))
+    }
 }
 
 /// Reassembles chunked Roland SysEx responses (~241 bytes payload per chunk).
@@ -253,6 +265,20 @@ mod tests {
             RolandSysExCodec::encode_u32_be7(0x1700),
             vec![0x00, 0x00, 0x2E, 0x00]
         );
+    }
+
+    #[test]
+    fn integer2x4_roundtrip() {
+        for value in 0..=9u8 {
+            let encoded = RolandSysExCodec::encode_integer2x4(value);
+            assert_eq!(
+                RolandSysExCodec::decode_integer2x4(&encoded),
+                Some(value)
+            );
+        }
+        assert_eq!(RolandSysExCodec::encode_integer2x4(9), [0x00, 0x09]);
+        assert_eq!(RolandSysExCodec::encode_integer2x4(10), [0x00, 0x0A]);
+        assert_eq!(RolandSysExCodec::encode_integer2x4(16), [0x01, 0x00]);
     }
 
     #[test]

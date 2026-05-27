@@ -10,6 +10,9 @@ export interface ParamDef {
   default?: number;
   group?: string;
   options?: string[];
+  wired?: boolean;
+  bts_name?: string;
+  address_space?: string;
 }
 
 export interface ParamValue {
@@ -23,6 +26,11 @@ export interface PatchMeta {
   channel?: number;
   patch_slot?: number;
   name?: string;
+}
+
+export interface ChannelInfo {
+  index: number;
+  label: string;
 }
 
 export interface Patch {

@@ -1,18 +1,31 @@
 import { useEffect } from "react";
 import { ConnectionPanel } from "./components/ConnectionPanel";
+import { DebugLogPanel } from "./components/DebugLogPanel";
 import { PatchEditor } from "./components/PatchEditor";
-import { subscribeDeviceEvents, getConnectionStatus, listEditableParams } from "./lib/tauri-api";
+import {
+  subscribeDeviceEvents,
+  getConnectionStatus,
+  listEditableParams,
+  listChannels,
+  getLogPath,
+} from "./lib/tauri-api";
 import { useToneForgeStore } from "./stores/toneforge";
+import { useDebugLogStore } from "./stores/debugLog";
 
 function App() {
   const setConnection = useToneForgeStore((s) => s.setConnection);
   const setPatch = useToneForgeStore((s) => s.setPatch);
   const setParams = useToneForgeStore((s) => s.setParams);
+  const setChannels = useToneForgeStore((s) => s.setChannels);
   const setError = useToneForgeStore((s) => s.setError);
+  const appendLog = useDebugLogStore((s) => s.append);
+  const setLogFilePath = useDebugLogStore((s) => s.setLogFilePath);
 
   useEffect(() => {
     void listEditableParams().then(setParams).catch((err) => setError(String(err)));
+    void listChannels().then(setChannels).catch(() => undefined);
     void getConnectionStatus().then(setConnection).catch(() => undefined);
+    void getLogPath().then(setLogFilePath).catch(() => undefined);
 
     const unsubscribe = subscribeDeviceEvents(
       (status, error) => {
@@ -20,10 +33,11 @@ function App() {
         if (error) setError(error);
       },
       (patch) => setPatch(patch),
+      (entry) => appendLog(entry),
     );
 
     return unsubscribe;
-  }, [setConnection, setPatch, setParams, setError]);
+  }, [setConnection, setPatch, setParams, setChannels, setError, appendLog, setLogFilePath]);
 
   return (
     <div className="min-h-screen p-4 md:p-6">
@@ -41,6 +55,8 @@ function App() {
         <ConnectionPanel />
         <PatchEditor />
       </div>
+
+      <DebugLogPanel />
     </div>
   );
 }
