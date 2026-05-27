@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ConnectionPanel } from "./components/ConnectionPanel";
 import { DebugLogPanel } from "./components/DebugLogPanel";
 import { PatchEditor } from "./components/PatchEditor";
+import { ToneLibraryPanel } from "./components/ToneLibraryPanel";
 import {
   subscribeDeviceEvents,
   getConnectionStatus,
@@ -46,13 +47,16 @@ function App() {
           <p className="text-xs uppercase tracking-[0.2em] text-orange-400">ToneForge</p>
           <h1 className="text-2xl font-semibold text-zinc-50">Katana Gen 3 Editor</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Connect, read, edit, and save patches with offline JSON support.
+            Connect, read, edit, and save patches locally or in your tone library.
           </p>
         </div>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <ConnectionPanel />
+        <div className="space-y-4">
+          <ConnectionPanel />
+          <ToneLibraryPanel />
+        </div>
         <PatchEditor />
       </div>
 

@@ -3,6 +3,7 @@ members = [
     "src-tauri",
     "crates/toneforge-core",
     "crates/toneforge-devices",
+    "crates/toneforge-library",
 ]
 resolver = "2"
 
@@ -20,3 +21,4 @@ midir = "0.10"
 tokio = { version = "1", features = ["sync", "rt-multi-thread", "macros", "time"] }
 toneforge-core = { path = "crates/toneforge-core" }
 toneforge-devices = { path = "crates/toneforge-devices" }
+toneforge-library = { path = "crates/toneforge-library" }
