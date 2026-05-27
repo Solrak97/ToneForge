@@ -1,0 +1,23 @@
+{
+  "device_family": "boss-katana",
+  "device_model": "katana-gen3",
+  "device_id": "41 10 01 05 07",
+  "patch_query": {
+    "current_channel_address": "00010000",
+    "patch_data_address": "60000000",
+    "patch_data_length": 128,
+    "editor_mode_address": "7F000001",
+    "editor_mode_value": 1
+  },
+  "parameters": [
+    {
+      "id": "amp_gain",
+      "label": "Gain",
+      "address": "60000020",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "group": "amp"
+    }
+  ]
+}

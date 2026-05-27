@@ -1,0 +1,114 @@
+{
+  "device_family": "boss-katana",
+  "device_model": "katana-gen3",
+  "device_id": "41 10 01 05 07",
+  "patch_query": {
+    "current_channel_address": "00010000",
+    "patch_data_address": "60000000",
+    "patch_data_length": 5888,
+    "editor_mode_address": "7F000001",
+    "editor_mode_value": 1
+  },
+  "params": [
+    {
+      "id": "amp_type",
+      "label": "Amp Type",
+      "address": "60000010",
+      "kind": "enum",
+      "min": 0,
+      "max": 4,
+      "group": "amp",
+      "options": ["Acoustic", "Clean", "Crunch", "Lead", "Brown"]
+    },
+    {
+      "id": "amp_gain",
+      "label": "Gain",
+      "address": "60000020",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 50,
+      "group": "amp"
+    },
+    {
+      "id": "amp_volume",
+      "label": "Volume",
+      "address": "60000021",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 50,
+      "group": "amp"
+    },
+    {
+      "id": "amp_bass",
+      "label": "Bass",
+      "address": "60000030",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 50,
+      "group": "eq"
+    },
+    {
+      "id": "amp_middle",
+      "label": "Middle",
+      "address": "60000031",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 50,
+      "group": "eq"
+    },
+    {
+      "id": "amp_treble",
+      "label": "Treble",
+      "address": "60000032",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 50,
+      "group": "eq"
+    },
+    {
+      "id": "fx_reverb_type",
+      "label": "Reverb Type",
+      "address": "60000100",
+      "kind": "enum",
+      "min": 0,
+      "max": 3,
+      "group": "fx",
+      "options": ["Room", "Hall", "Plate", "Spring"]
+    },
+    {
+      "id": "fx_reverb_level",
+      "label": "Reverb Level",
+      "address": "60000101",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "group": "fx"
+    },
+    {
+      "id": "fx_delay_level",
+      "label": "Delay Level",
+      "address": "60000110",
+      "kind": "u8",
+      "min": 0,
+      "max": 100,
+      "default": 0,
+      "group": "fx"
+    },
+    {
+      "id": "fx_boost_on",
+      "label": "Boost",
+      "address": "60000120",
+      "kind": "enum",
+      "min": 0,
+      "max": 1,
+      "group": "fx",
+      "options": ["Off", "On"]
+    }
+  ]
+}
