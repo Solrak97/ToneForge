@@ -30,6 +30,8 @@ Close Boss Tone Studio before connecting — only one app can use the Katana MID
 
 Branching follows Gitflow — see [`docs/GITFLOW.md`](docs/GITFLOW.md).
 
+Releases and installers are documented in [`docs/RELEASE.md`](docs/RELEASE.md).
+
 ```bash
 git checkout develop
 npm install

@@ -58,6 +58,8 @@ git merge main
 git push origin develop
 ```
 
+See [`docs/RELEASE.md`](RELEASE.md) for building installers via GitHub Actions or locally.
+
 ### Hotfix on production
 
 ```bash
