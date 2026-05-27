@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { ConnectionStatus, DeviceInfo, ParamDef, Patch, ChannelInfo } from "../types/device";
+import type { SaveToneRequest, ToneRecord, ToneSummary } from "../types/library";
 import type { DebugLogEntry, LogLevel } from "../stores/debugLog";
 
 async function loggedInvoke<T>(label: string, fn: () => Promise<T>): Promise<T> {
@@ -80,6 +81,70 @@ export async function loadPresetFromDialog(): Promise<Patch> {
     throw new Error("No preset selected");
   }
   return invoke<Patch>("load_preset", { path });
+}
+
+export async function listLibraryTones(query?: string): Promise<ToneSummary[]> {
+  return invoke<ToneSummary[]>("list_library_tones", { query: query ?? null });
+}
+
+export async function getLibraryTone(id: number): Promise<ToneRecord> {
+  return invoke<ToneRecord>("get_library_tone", { id });
+}
+
+export async function importLibraryToneFromAmp(request: SaveToneRequest): Promise<ToneRecord> {
+  return loggedInvoke(`importLibraryToneFromAmp(${request.name})`, () =>
+    invoke<ToneRecord>("import_library_tone_from_amp", { request }),
+  );
+}
+
+export async function importLibraryToneFromFile(
+  path: string,
+  request: SaveToneRequest,
+): Promise<ToneRecord> {
+  return loggedInvoke("importLibraryToneFromFile", () =>
+    invoke<ToneRecord>("import_library_tone_from_file", { path, request }),
+  );
+}
+
+export async function importLibraryToneFromDialog(
+  request: SaveToneRequest,
+): Promise<ToneRecord | null> {
+  const path = await open({
+    filters: [{ name: "ToneForge Preset", extensions: ["json"] }],
+    multiple: false,
+  });
+  if (!path || Array.isArray(path)) {
+    return null;
+  }
+  return importLibraryToneFromFile(path, request);
+}
+
+export async function saveLibraryTone(request: SaveToneRequest): Promise<ToneRecord> {
+  return loggedInvoke(`saveLibraryTone(${request.name})`, () =>
+    invoke<ToneRecord>("save_library_tone", { request }),
+  );
+}
+
+export async function loadLibraryTone(id: number, writeToDevice: boolean): Promise<Patch> {
+  return loggedInvoke(`loadLibraryTone(${id})`, () =>
+    invoke<Patch>("load_library_tone", { id, writeToDevice }),
+  );
+}
+
+export async function deleteLibraryTone(id: number): Promise<void> {
+  return loggedInvoke(`deleteLibraryTone(${id})`, () =>
+    invoke("delete_library_tone", { id }),
+  );
+}
+
+export async function renameLibraryTone(id: number, name: string): Promise<ToneRecord> {
+  return loggedInvoke(`renameLibraryTone(${id})`, () =>
+    invoke<ToneRecord>("rename_library_tone", { id, name }),
+  );
+}
+
+export async function getLibraryDbPath(): Promise<string> {
+  return invoke<string>("get_library_db_path");
 }
 
 export function subscribeDeviceEvents(

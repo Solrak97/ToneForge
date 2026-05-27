@@ -27,6 +27,9 @@ const GROUP_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+type PatchEditorTab = "amp" | "effects" | "dynamics" | "eq" | "routing" | "all";
+type EffectsSubTab = "all" | "booster" | "mod_fx" | "delay" | "reverb" | "fx_switch" | "color";
+
 function paramValueToNumber(value?: ParamValue): number {
   if (!value) return 0;
   if (typeof value.value === "number") return value.value;
@@ -108,23 +111,37 @@ export function PatchEditor() {
   const setError = useToneForgeStore((s) => s.setError);
   const [pendingParam, setPendingParam] = useState<string | null>(null);
   const [showCatalog, setShowCatalog] = useState(false);
+  const [tab, setTab] = useState<PatchEditorTab>("effects");
+  const [effectsTab, setEffectsTab] = useState<EffectsSubTab>("all");
 
   const stats = useMemo(() => {
     const wired = params.filter((p) => p.wired !== false).length;
     return { total: params.length, wired };
   }, [params]);
 
+  const allowedGroups = useMemo(() => {
+    if (tab === "all") return null;
+    if (tab === "amp") return new Set(["amp", "patch", "other"]);
+    if (tab === "eq") return new Set(["eq", "contour"]);
+    if (tab === "dynamics") return new Set(["noise_suppressor", "solo"]);
+    if (tab === "routing") return new Set(["pedal_fx", "send_return", "assign", "other"]);
+    // effects
+    if (effectsTab === "all") return new Set(["booster", "mod_fx", "mod_fx_detail", "delay", "reverb", "fx_switch", "color"]);
+    return new Set([effectsTab]);
+  }, [tab, effectsTab]);
+
   const grouped = useMemo(() => {
     const groups = new Map<string, ParamDef[]>();
     for (const param of params) {
       if (!showCatalog && param.wired === false) continue;
       const group = param.group ?? "other";
+      if (allowedGroups && !allowedGroups.has(group)) continue;
       const list = groups.get(group) ?? [];
       list.push(param);
       groups.set(group, list);
     }
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [params, showCatalog]);
+  }, [params, showCatalog, allowedGroups]);
 
   async function handleParamCommit(paramId: string, value: number) {
     if (!connection.connected) return;
@@ -214,6 +231,83 @@ export function PatchEditor() {
                 />
                 Show full parameter catalog (includes placeholders)
               </label>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <Button variant={tab === "effects" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("effects")}>
+                  Effects
+                </Button>
+                <Button variant={tab === "amp" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("amp")}>
+                  Amp
+                </Button>
+                <Button variant={tab === "dynamics" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("dynamics")}>
+                  Dynamics
+                </Button>
+                <Button variant={tab === "eq" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("eq")}>
+                  EQ
+                </Button>
+                <Button variant={tab === "routing" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("routing")}>
+                  Routing
+                </Button>
+                <Button variant={tab === "all" ? "secondary" : "ghost"} disabled={busy} onClick={() => setTab("all")}>
+                  All
+                </Button>
+              </div>
+
+              {tab === "effects" && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={effectsTab === "all" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("all")}
+                  >
+                    All effects
+                  </Button>
+                  <Button
+                    variant={effectsTab === "booster" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("booster")}
+                  >
+                    Booster
+                  </Button>
+                  <Button
+                    variant={effectsTab === "mod_fx" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("mod_fx")}
+                  >
+                    Mod/FX
+                  </Button>
+                  <Button
+                    variant={effectsTab === "delay" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("delay")}
+                  >
+                    Delay
+                  </Button>
+                  <Button
+                    variant={effectsTab === "reverb" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("reverb")}
+                  >
+                    Reverb
+                  </Button>
+                  <Button
+                    variant={effectsTab === "fx_switch" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("fx_switch")}
+                  >
+                    Switches
+                  </Button>
+                  <Button
+                    variant={effectsTab === "color" ? "secondary" : "ghost"}
+                    disabled={busy}
+                    onClick={() => setEffectsTab("color")}
+                  >
+                    Colors
+                  </Button>
+                </div>
+              )}
             </div>
 
             {grouped.map(([group, groupParams]) => (

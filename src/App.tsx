@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ConnectionPanel } from "./components/ConnectionPanel";
+import { Button } from "./components/ui/button";
 import { DebugLogPanel } from "./components/DebugLogPanel";
 import { PatchEditor } from "./components/PatchEditor";
+import { ToneLibraryPanel } from "./components/ToneLibraryPanel";
 import {
   subscribeDeviceEvents,
   getConnectionStatus,
@@ -13,6 +15,8 @@ import { useToneForgeStore } from "./stores/toneforge";
 import { useDebugLogStore } from "./stores/debugLog";
 
 function App() {
+  const [mainTab, setMainTab] = useState<"editor" | "library">("editor");
+
   const setConnection = useToneForgeStore((s) => s.setConnection);
   const setPatch = useToneForgeStore((s) => s.setPatch);
   const setParams = useToneForgeStore((s) => s.setParams);
@@ -46,14 +50,32 @@ function App() {
           <p className="text-xs uppercase tracking-[0.2em] text-orange-400">ToneForge</p>
           <h1 className="text-2xl font-semibold text-zinc-50">Katana Gen 3 Editor</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Connect, read, edit, and save patches with offline JSON support.
+            Connect, read, edit, and save patches locally or in your tone library.
           </p>
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+      <div className="space-y-4">
         <ConnectionPanel />
-        <PatchEditor />
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <Button
+              variant={mainTab === "editor" ? "secondary" : "ghost"}
+              onClick={() => setMainTab("editor")}
+            >
+              Editor
+            </Button>
+            <Button
+              variant={mainTab === "library" ? "secondary" : "ghost"}
+              onClick={() => setMainTab("library")}
+            >
+              Library
+            </Button>
+          </div>
+        </div>
+
+        {mainTab === "editor" ? <PatchEditor /> : <ToneLibraryPanel />}
       </div>
 
       <DebugLogPanel />

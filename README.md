@@ -17,6 +17,7 @@ Repository: [github.com/Solrak97/ToneForge](https://github.com/Solrak97/ToneForg
 - Read current patch from the amp
 - Edit core amp, EQ, and FX parameters
 - Save and load offline JSON presets
+- Browse and save tones in a local SQLite library
 
 ## Prerequisites
 
@@ -57,6 +58,10 @@ npm run export:map
 ```
 
 Each parameter includes `wired: true|false` — only wired params are read/written over SysEx today. The rest are catalogued placeholders ready to enable.
+
+## Tone Library
+
+Saved tones are stored in a local SQLite database (`toneforge.db` in the app data directory). The library stores full patch JSON so tones can be loaded into the editor or sent to the amp when connected.
 
 To import a richer map from Boss Tone Studio manually, export into the BTS JSON format supported by `AddressMap::from_bts_export()` (see fixture in `crates/toneforge-core/tests/fixtures/gen3_bts_export.json`).
 

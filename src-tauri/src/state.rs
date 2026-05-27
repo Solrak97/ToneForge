@@ -2,15 +2,16 @@ use std::sync::Mutex;
 use toneforge_core::address_map::ParamDef;
 use toneforge_core::preset::{ParamValue, Patch, PresetFile};
 use toneforge_devices::{DeviceDriver, DeviceInfo, KatanaGen3Driver};
+use toneforge_library::ToneLibrary;
 use tracing::warn;
 
-#[derive(Default)]
 pub struct AppState {
     inner: Mutex<StateInner>,
 }
 
 struct StateInner {
     driver: KatanaGen3Driver,
+    library: ToneLibrary,
     connection: ConnectionStatus,
     last_patch: Option<Patch>,
     last_error: Option<String>,
@@ -24,18 +25,27 @@ pub struct ConnectionStatus {
     pub editor_mode: bool,
 }
 
-impl Default for StateInner {
-    fn default() -> Self {
+impl AppState {
+    pub fn new(library: ToneLibrary) -> Self {
         Self {
-            driver: KatanaGen3Driver::new(),
-            connection: ConnectionStatus::default(),
-            last_patch: None,
-            last_error: None,
+            inner: Mutex::new(StateInner {
+                driver: KatanaGen3Driver::new(),
+                library,
+                connection: ConnectionStatus::default(),
+                last_patch: None,
+                last_error: None,
+            }),
         }
     }
-}
 
-impl AppState {
+    pub fn with_library<F, R>(&self, f: F) -> Result<R, String>
+    where
+        F: FnOnce(&ToneLibrary) -> Result<R, toneforge_library::LibraryError>,
+    {
+        let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
+        f(&inner.library).map_err(|e| e.to_string())
+    }
+
     pub fn with_driver<F, R>(&self, f: F) -> Result<R, String>
     where
         F: FnOnce(&mut KatanaGen3Driver) -> Result<R, toneforge_devices::DeviceError>,

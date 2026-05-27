@@ -1,5 +1,4 @@
-use crate::logging;
-use crate::state::{preset_from_json, preset_to_json, AppState, ConnectionStatus};
+use crate::state::AppState;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use toneforge_core::address_map::ParamDef;
@@ -10,20 +9,39 @@ const POST_WRITE_SETTLE: Duration = Duration::from_millis(30);
 const CHANNEL_SELECT_SETTLE: Duration = Duration::from_millis(400);
 
 #[derive(Clone, serde::Serialize)]
-struct ConnectionChangedPayload {
-    status: ConnectionStatus,
+pub struct ConnectionChangedPayload {
+    status: crate::state::ConnectionStatus,
     error: Option<String>,
 }
 
 #[derive(Clone, serde::Serialize)]
-struct PatchUpdatedPayload {
-    patch: Patch,
+pub struct PatchUpdatedPayload {
+    pub patch: Patch,
 }
 
 #[derive(Clone, serde::Serialize)]
 pub struct ChannelInfo {
     pub index: u8,
     pub label: String,
+}
+
+pub(crate) fn apply_patch_to_device(state: &AppState, patch: &Patch) -> Result<(), String> {
+    let mut write_failures = 0usize;
+    for (param_id, value) in &patch.params {
+        if let Some(v) = value.as_u8() {
+            match state.with_driver(|driver| driver.write_param(param_id, v)) {
+                Ok(()) => tracing::debug!(param_id = %param_id, value = v, "patch param written"),
+                Err(err) => {
+                    write_failures += 1;
+                    tracing::warn!(param_id = %param_id, value = v, error = %err, "patch param write failed");
+                }
+            }
+        }
+    }
+    if write_failures > 0 {
+        tracing::warn!(write_failures, "some patch params failed to write");
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -79,7 +97,7 @@ pub fn connect_device(
     app: AppHandle,
     state: State<AppState>,
     port_name: String,
-) -> Result<ConnectionStatus, String> {
+) -> Result<crate::state::ConnectionStatus, String> {
     tracing::info!(port = %port_name, "connect_device");
     state.with_driver(|driver| driver.connect(&port_name))?;
     state.set_connected(port_name.clone())?;
@@ -102,7 +120,10 @@ pub fn connect_device(
 }
 
 #[tauri::command]
-pub fn disconnect_device(app: AppHandle, state: State<AppState>) -> Result<ConnectionStatus, String> {
+pub fn disconnect_device(
+    app: AppHandle,
+    state: State<AppState>,
+) -> Result<crate::state::ConnectionStatus, String> {
     tracing::info!("disconnect_device");
     let _ = state.with_driver(|driver| driver.disconnect());
     state.set_disconnected()?;
@@ -120,7 +141,9 @@ pub fn disconnect_device(app: AppHandle, state: State<AppState>) -> Result<Conne
 }
 
 #[tauri::command]
-pub fn get_connection_status(state: State<AppState>) -> Result<ConnectionStatus, String> {
+pub fn get_connection_status(
+    state: State<AppState>,
+) -> Result<crate::state::ConnectionStatus, String> {
     state.connection_status()
 }
 
@@ -175,7 +198,7 @@ pub fn save_preset(state: State<AppState>, path: String) -> Result<(), String> {
     let patch = state
         .last_patch()?
         .ok_or_else(|| "no patch loaded; read from device first".to_string())?;
-    let json = preset_to_json(&patch)?;
+    let json = crate::state::preset_to_json(&patch)?;
     std::fs::write(&path, json).map_err(|e| e.to_string())
 }
 
@@ -183,25 +206,10 @@ pub fn save_preset(state: State<AppState>, path: String) -> Result<(), String> {
 pub fn load_preset(app: AppHandle, state: State<AppState>, path: String) -> Result<Patch, String> {
     tracing::info!(path = %path, "load_preset");
     let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    let preset = preset_from_json(&raw)?;
+    let preset = crate::state::preset_from_json(&raw)?;
     let patch = preset.patch;
 
-    let mut write_failures = 0usize;
-    for (param_id, value) in &patch.params {
-        if let Some(v) = value.as_u8() {
-            match state.with_driver(|driver| driver.write_param(param_id, v)) {
-                Ok(()) => tracing::debug!(param_id = %param_id, value = v, "preset param written"),
-                Err(err) => {
-                    write_failures += 1;
-                    tracing::warn!(param_id = %param_id, value = v, error = %err, "preset param write failed");
-                }
-            }
-        }
-    }
-
-    if write_failures > 0 {
-        tracing::warn!(write_failures, "some preset params failed to write");
-    }
+    apply_patch_to_device(&state, &patch)?;
 
     state.set_patch(patch.clone())?;
     if let Err(e) = app.emit(
@@ -223,5 +231,5 @@ pub fn list_editable_params(state: State<AppState>) -> Result<Vec<ParamDef>, Str
 #[tauri::command]
 pub fn get_log_path(app: AppHandle) -> Result<String, String> {
     let log_dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
-    Ok(logging::log_file_path(&log_dir).display().to_string())
+    Ok(crate::logging::log_file_path(&log_dir).display().to_string())
 }
