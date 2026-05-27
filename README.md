@@ -28,7 +28,10 @@ Close Boss Tone Studio before connecting — only one app can use the Katana MID
 
 ## Development
 
+Branching follows Gitflow — see [`docs/GITFLOW.md`](docs/GITFLOW.md).
+
 ```bash
+git checkout develop
 npm install
 npm run tauri dev
 ```
