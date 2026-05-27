@@ -87,6 +87,38 @@ export async function listLibraryTones(query?: string): Promise<ToneSummary[]> {
   return invoke<ToneSummary[]>("list_library_tones", { query: query ?? null });
 }
 
+export async function getLibraryTone(id: number): Promise<ToneRecord> {
+  return invoke<ToneRecord>("get_library_tone", { id });
+}
+
+export async function importLibraryToneFromAmp(request: SaveToneRequest): Promise<ToneRecord> {
+  return loggedInvoke(`importLibraryToneFromAmp(${request.name})`, () =>
+    invoke<ToneRecord>("import_library_tone_from_amp", { request }),
+  );
+}
+
+export async function importLibraryToneFromFile(
+  path: string,
+  request: SaveToneRequest,
+): Promise<ToneRecord> {
+  return loggedInvoke("importLibraryToneFromFile", () =>
+    invoke<ToneRecord>("import_library_tone_from_file", { path, request }),
+  );
+}
+
+export async function importLibraryToneFromDialog(
+  request: SaveToneRequest,
+): Promise<ToneRecord | null> {
+  const path = await open({
+    filters: [{ name: "ToneForge Preset", extensions: ["json"] }],
+    multiple: false,
+  });
+  if (!path || Array.isArray(path)) {
+    return null;
+  }
+  return importLibraryToneFromFile(path, request);
+}
+
 export async function saveLibraryTone(request: SaveToneRequest): Promise<ToneRecord> {
   return loggedInvoke(`saveLibraryTone(${request.name})`, () =>
     invoke<ToneRecord>("save_library_tone", { request }),

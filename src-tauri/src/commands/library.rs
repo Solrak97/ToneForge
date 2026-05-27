@@ -1,6 +1,7 @@
 use crate::state::AppState;
 use tauri::{AppHandle, Emitter, Manager, State};
 use toneforge_core::preset::Patch;
+use toneforge_devices::DeviceDriver;
 use toneforge_library::{SaveToneRequest, ToneRecord, ToneSummary};
 
 use super::{apply_patch_to_device, PatchUpdatedPayload};
@@ -74,6 +75,47 @@ pub fn load_library_tone(
         tracing::warn!(error = %e, "failed to emit patch-updated");
     }
     Ok(patch)
+}
+
+#[tauri::command]
+pub fn import_library_tone_from_amp(
+    state: State<AppState>,
+    request: SaveToneRequest,
+) -> Result<ToneRecord, String> {
+    if !state.connection_status()?.connected {
+        return Err("connect to your Katana before importing from the amp".to_string());
+    }
+    tracing::info!(name = %request.name, "import_library_tone_from_amp");
+    let patch = state.with_driver(|driver| driver.read_current_patch())?;
+    state.set_patch(patch.clone())?;
+    state.with_library(|library| library.save(&request.name, &patch, &request.notes, &request.tags))
+}
+
+#[tauri::command]
+pub fn import_library_tone_from_file(
+    state: State<AppState>,
+    path: String,
+    request: SaveToneRequest,
+) -> Result<ToneRecord, String> {
+    tracing::info!(path = %path, "import_library_tone_from_file");
+    let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let preset = crate::state::preset_from_json(&raw)?;
+    let patch = preset.patch;
+
+    let name = {
+        let trimmed = request.name.trim();
+        if trimmed.is_empty() {
+            std::path::Path::new(&path)
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .unwrap_or("Imported tone")
+                .to_string()
+        } else {
+            trimmed.to_string()
+        }
+    };
+
+    state.with_library(|library| library.save(&name, &patch, &request.notes, &request.tags))
 }
 
 #[tauri::command]

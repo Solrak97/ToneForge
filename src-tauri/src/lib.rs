@@ -46,6 +46,8 @@ pub fn run() {
             commands::delete_library_tone,
             commands::rename_library_tone,
             commands::load_library_tone,
+            commands::import_library_tone_from_amp,
+            commands::import_library_tone_from_file,
             commands::get_library_db_path,
         ])
         .run(tauri::generate_context!())

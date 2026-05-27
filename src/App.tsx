@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ConnectionPanel } from "./components/ConnectionPanel";
+import { Button } from "./components/ui/button";
 import { DebugLogPanel } from "./components/DebugLogPanel";
 import { PatchEditor } from "./components/PatchEditor";
 import { ToneLibraryPanel } from "./components/ToneLibraryPanel";
@@ -14,6 +15,8 @@ import { useToneForgeStore } from "./stores/toneforge";
 import { useDebugLogStore } from "./stores/debugLog";
 
 function App() {
+  const [mainTab, setMainTab] = useState<"editor" | "library">("editor");
+
   const setConnection = useToneForgeStore((s) => s.setConnection);
   const setPatch = useToneForgeStore((s) => s.setPatch);
   const setParams = useToneForgeStore((s) => s.setParams);
@@ -52,12 +55,27 @@ function App() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <div className="space-y-4">
-          <ConnectionPanel />
-          <ToneLibraryPanel />
+      <div className="space-y-4">
+        <ConnectionPanel />
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <Button
+              variant={mainTab === "editor" ? "secondary" : "ghost"}
+              onClick={() => setMainTab("editor")}
+            >
+              Editor
+            </Button>
+            <Button
+              variant={mainTab === "library" ? "secondary" : "ghost"}
+              onClick={() => setMainTab("library")}
+            >
+              Library
+            </Button>
+          </div>
         </div>
-        <PatchEditor />
+
+        {mainTab === "editor" ? <PatchEditor /> : <ToneLibraryPanel />}
       </div>
 
       <DebugLogPanel />

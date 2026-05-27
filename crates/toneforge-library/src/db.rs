@@ -229,6 +229,19 @@ mod tests {
     }
 
     #[test]
+    fn import_from_preset_json() {
+        let library = ToneLibrary::open_in_memory().expect("memory db");
+        let preset = PresetFile::from_patch(sample_patch());
+        let json = serde_json::to_string(&preset).expect("json");
+        let parsed: PresetFile = serde_json::from_str(&json).expect("parse");
+        let saved = library
+            .save("Imported", &parsed.patch, "from file", &[])
+            .expect("save");
+        assert_eq!(saved.name, "Imported");
+        assert_eq!(saved.notes, "from file");
+    }
+
+    #[test]
     fn search_by_name() {
         let library = ToneLibrary::open_in_memory().expect("memory db");
         library
