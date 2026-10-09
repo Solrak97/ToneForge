@@ -1,0 +1,13 @@
+{
+  "name": "toneforge-cursor-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Runs a local Cursor agent for the ToneForge chat, with the ToneForge MCP server as its only tools",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.37"
+  }
+}

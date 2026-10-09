@@ -25,3 +25,8 @@ dist-ssr
 
 target/
 Cargo.lock
+
+# tsc -b output for the Vite config
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

@@ -1,0 +1,31 @@
+---
+description: ToneForge UI design philosophy (lean, uncluttered, cohesive, easy to use). Apply to any UI work.
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Design philosophy: lean, clean, cohesive
+
+Optimize for ease of use while keeping the UI clean. When in doubt, remove.
+
+## Less clutter
+- Every element must earn its place. Prefer removing a control, label or helper text over adding one.
+- Show advanced or rarely used options on demand (hover actions, menus, modals, experimental mode), not always on screen.
+- One primary action per area. Secondary actions are ghost buttons or icons with a `title`/`aria-label`.
+- Use icons (`ui/icons.tsx`) for familiar actions (new, import, export, search, edit, delete, close) instead of text buttons.
+- Avoid table/spreadsheet layouts for browsing content; use lists or cards with whitespace.
+- No duplicate info: don't repeat a title, status or value already visible nearby.
+- Helper text: one short line, only when the control isn't self-explanatory.
+
+## Cohesive components
+- Build from the shared primitives: `Card`, `Button`, `IconButton`, `Badge`, `Modal`, `Segmented` (view/tab/channel pickers), and `fieldClass`/`textAreaClass` from `ui/field.ts`. Don't restyle them inline; extend the primitive if a variant is missing.
+- Every top-level page is a single `PageCard` (+ `PageCardContent`) that fills the space below the nav; scroll inside it, never the window.
+- Multi-column layouts use `Pane`, `ResizeHandle`, `usePaneGroup` and `useCollapsiblePane` from `ui/panes.tsx` (resizable, collapsible to a rail, layout remembered); the main area absorbs the space.
+- Same kind of thing, same look everywhere: one list-row style, one card style, one hover-action pattern, one empty-state style.
+- Consistent spacing scale (`gap-2`/`gap-3`, `p-3`, `space-y-3`), radius (`rounded-md` controls, `rounded-lg` panels) and the zinc palette with orange as the single accent. Amber only for warnings/experimental, red only for destructive or errors.
+- Side-by-side controls are the same size (see `ui-control-sizing.mdc`).
+
+## Ease of use
+- Common tasks take the fewest clicks; prefer direct manipulation (drag and drop, inline edit, autosave) over forms with Save buttons where it's safe.
+- Confirm only destructive or risky actions; everything else just happens with quiet feedback.
+- Labels use plain musician-friendly language, not internal or protocol terms.

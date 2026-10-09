@@ -1,0 +1,95 @@
+{
+  "name": "ToneForge Blues",
+  "tones": [
+    {
+      "name": "Clean Blues",
+      "memo": "Fender-ish clean with light compression and spring reverb. Rhythm and fingerstyle.",
+      "params": {
+        "patch_amp_type": "Clean", "patch_amp_gain": 32, "patch_amp_volume": 16,
+        "patch_amp_bass": 48, "patch_amp_middle": 55, "patch_amp_treble": 56, "patch_amp_presence": 45,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "Off", "patch_sw_mod_sw": "On", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_fx_type_slot1": "Comp",
+        "patch_fx_detail_comp_type_slot1": 0, "patch_fx_detail_comp_sustain_slot1": 35,
+        "patch_fx_detail_comp_attack_slot1": 55, "patch_fx_detail_comp_tone_slot1": 0,
+        "patch_fx_detail_comp_level_slot1": 52,
+        "patch_reverb_type_slot1": "Spring", "patch_reverb_time_slot1": 30,
+        "patch_reverb_pre_delay_slot1": 10, "patch_reverb_effect_level_slot1": 24
+      }
+    },
+    {
+      "name": "Texas Crunch",
+      "memo": "SRV-style: crunch amp pushed by a Tube Screamer, mids forward, spring reverb.",
+      "params": {
+        "patch_amp_type": "Crunch", "patch_amp_gain": 45, "patch_amp_volume": 15,
+        "patch_amp_bass": 50, "patch_amp_middle": 62, "patch_amp_treble": 52, "patch_amp_presence": 42,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "On", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_booster_type_slot1": "T-Scream", "patch_booster_drive_slot1": 28,
+        "patch_booster_tone_slot1": 4, "patch_booster_bottom_slot1": 0, "patch_booster_effect_level_slot1": 72,
+        "patch_reverb_type_slot1": "Spring", "patch_reverb_time_slot1": 28,
+        "patch_reverb_pre_delay_slot1": 8, "patch_reverb_effect_level_slot1": 20
+      }
+    },
+    {
+      "name": "Chicago Shuffle",
+      "memo": "Pushed amp with a Blues Driver edge. Fat, a little hairy, room reverb.",
+      "params": {
+        "patch_amp_type": "Pushed", "patch_amp_gain": 50, "patch_amp_volume": 14,
+        "patch_amp_bass": 55, "patch_amp_middle": 60, "patch_amp_treble": 48, "patch_amp_presence": 40,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "On", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_booster_type_slot1": "Blues Drive", "patch_booster_drive_slot1": 35,
+        "patch_booster_tone_slot1": 0, "patch_booster_bottom_slot1": 5, "patch_booster_effect_level_slot1": 60,
+        "patch_reverb_type_slot1": "Room", "patch_reverb_time_slot1": 35,
+        "patch_reverb_pre_delay_slot1": 5, "patch_reverb_effect_level_slot1": 22
+      }
+    },
+    {
+      "name": "Slow Blues Lead",
+      "memo": "Singing lead: crunch + overdrive, gentle comp for sustain, analog slapback-to-echo, hall.",
+      "params": {
+        "patch_amp_type": "Crunch", "patch_amp_gain": 55, "patch_amp_volume": 16,
+        "patch_amp_bass": 48, "patch_amp_middle": 65, "patch_amp_treble": 50, "patch_amp_presence": 44,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "On", "patch_sw_mod_sw": "On", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "On", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_booster_type_slot1": "Overdrive", "patch_booster_drive_slot1": 40,
+        "patch_booster_tone_slot1": 2, "patch_booster_bottom_slot1": 5, "patch_booster_effect_level_slot1": 75,
+        "patch_fx_type_slot1": "Comp",
+        "patch_fx_detail_comp_type_slot1": 0, "patch_fx_detail_comp_sustain_slot1": 45,
+        "patch_fx_detail_comp_attack_slot1": 40, "patch_fx_detail_comp_tone_slot1": 0,
+        "patch_fx_detail_comp_level_slot1": 50,
+        "patch_delay_type_slot1": "Analog", "patch_delay_time_slot1": 380, "patch_delay_feedback_slot1": 22,
+        "patch_delay_effect_level_slot1": 18, "patch_delay_high_cut_slot1": 9, "patch_delay_mod_sw_slot1": 0,
+        "patch_reverb_type_slot1": "Hall", "patch_reverb_time_slot1": 45,
+        "patch_reverb_pre_delay_slot1": 20, "patch_reverb_effect_level_slot1": 26
+      }
+    },
+    {
+      "name": "Burst Lead",
+      "memo": "Les Paul into a cranked amp: Lead channel with a warm OD push, digital echo, plate.",
+      "params": {
+        "patch_amp_type": "Lead", "patch_amp_gain": 50, "patch_amp_volume": 14,
+        "patch_amp_bass": 50, "patch_amp_middle": 60, "patch_amp_treble": 50, "patch_amp_presence": 42,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "On", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "On", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_booster_type_slot1": "Warm OD", "patch_booster_drive_slot1": 30,
+        "patch_booster_tone_slot1": 0, "patch_booster_bottom_slot1": 0, "patch_booster_effect_level_slot1": 70,
+        "patch_delay_type_slot1": "Digital", "patch_delay_time_slot1": 420, "patch_delay_feedback_slot1": 25,
+        "patch_delay_effect_level_slot1": 20, "patch_delay_high_cut_slot1": 9, "patch_delay_mod_sw_slot1": 0,
+        "patch_reverb_type_slot1": "Plate", "patch_reverb_time_slot1": 40,
+        "patch_reverb_pre_delay_slot1": 15, "patch_reverb_effect_level_slot1": 22
+      }
+    }
+  ]
+}
