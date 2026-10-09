@@ -1,0 +1,95 @@
+{
+  "name": "ToneForge Math Rock",
+  "tones": [
+    {
+      "name": "Tapping Clean",
+      "memo": "Bright, compressed clean for two-hand tapping. Comp evens out the hammer-ons; small room.",
+      "params": {
+        "patch_amp_type": "Clean", "patch_amp_gain": 28, "patch_amp_volume": 16,
+        "patch_amp_bass": 42, "patch_amp_middle": 52, "patch_amp_treble": 62, "patch_amp_presence": 55,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "Off", "patch_sw_mod_sw": "On", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_fx_type_slot1": "Comp",
+        "patch_fx_detail_comp_type_slot1": 0, "patch_fx_detail_comp_sustain_slot1": 60,
+        "patch_fx_detail_comp_attack_slot1": 65, "patch_fx_detail_comp_tone_slot1": 6,
+        "patch_fx_detail_comp_level_slot1": 50,
+        "patch_reverb_type_slot1": "Room", "patch_reverb_time_slot1": 25,
+        "patch_reverb_pre_delay_slot1": 5, "patch_reverb_effect_level_slot1": 18
+      }
+    },
+    {
+      "name": "Twinkle Echo",
+      "memo": "Midwest-emo clean: comp plus a short, dry digital echo that thickens arpeggios without wobble.",
+      "params": {
+        "patch_amp_type": "Clean", "patch_amp_gain": 30, "patch_amp_volume": 15,
+        "patch_amp_bass": 45, "patch_amp_middle": 50, "patch_amp_treble": 60, "patch_amp_presence": 50,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "Off", "patch_sw_mod_sw": "On", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "On", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_fx_type_slot1": "Comp",
+        "patch_fx_detail_comp_type_slot1": 0, "patch_fx_detail_comp_sustain_slot1": 50,
+        "patch_fx_detail_comp_attack_slot1": 60, "patch_fx_detail_comp_tone_slot1": 4,
+        "patch_fx_detail_comp_level_slot1": 50,
+        "patch_delay_type_slot1": "Digital", "patch_delay_time_slot1": 140, "patch_delay_feedback_slot1": 15,
+        "patch_delay_effect_level_slot1": 22, "patch_delay_high_cut_slot1": 11, "patch_delay_mod_sw_slot1": 0,
+        "patch_reverb_type_slot1": "Plate", "patch_reverb_time_slot1": 30,
+        "patch_reverb_pre_delay_slot1": 10, "patch_reverb_effect_level_slot1": 18
+      }
+    },
+    {
+      "name": "Angular Crunch",
+      "memo": "Edge-of-breakup for loud odd-time riffs: pushed amp with a clean boost, tight lows.",
+      "params": {
+        "patch_amp_type": "Pushed", "patch_amp_gain": 42, "patch_amp_volume": 14,
+        "patch_amp_bass": 40, "patch_amp_middle": 58, "patch_amp_treble": 58, "patch_amp_presence": 50,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "On", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "Off",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_booster_type_slot1": "Clean Boost", "patch_booster_drive_slot1": 45,
+        "patch_booster_tone_slot1": 4, "patch_booster_bottom_slot1": -6, "patch_booster_effect_level_slot1": 65,
+        "patch_reverb_type_slot1": "Room", "patch_reverb_time_slot1": 20,
+        "patch_reverb_pre_delay_slot1": 0, "patch_reverb_effect_level_slot1": 14
+      }
+    },
+    {
+      "name": "Octave Riff",
+      "memo": "Crunch riffs doubled an octave down (FX block) for unison bass-and-guitar lines.",
+      "params": {
+        "patch_amp_type": "Crunch", "patch_amp_gain": 48, "patch_amp_volume": 13,
+        "patch_amp_bass": 45, "patch_amp_middle": 60, "patch_amp_treble": 54, "patch_amp_presence": 46,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "Off", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "On",
+        "patch_sw_delay_sw": "Off", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_fx_type_slot4": "Octave",
+        "patch_fx_detail_octave_range_slot4": 0, "patch_fx_detail_octave_effect_level_slot4": 55,
+        "patch_fx_detail_octave_direct_mix_slot4": 100,
+        "patch_reverb_type_slot1": "Room", "patch_reverb_time_slot1": 22,
+        "patch_reverb_pre_delay_slot1": 0, "patch_reverb_effect_level_slot1": 15
+      }
+    },
+    {
+      "name": "Swell Bridge",
+      "memo": "Ambient bridge: Slow Gear volume swells into long digital echo and a big hall.",
+      "params": {
+        "patch_amp_type": "Clean", "patch_amp_gain": 30, "patch_amp_volume": 16,
+        "patch_amp_bass": 48, "patch_amp_middle": 50, "patch_amp_treble": 55, "patch_amp_presence": 45,
+        "patch_color_booster_color": "Green", "patch_color_mod_color": "Green", "patch_color_fx_color": "Green",
+        "patch_color_delay_color": "Green", "patch_color_reverb_color": "Green",
+        "patch_sw_booster_sw": "Off", "patch_sw_mod_sw": "Off", "patch_sw_fx_sw": "On",
+        "patch_sw_delay_sw": "On", "patch_sw_delay2_sw": "Off", "patch_sw_reverb_sw": "On", "patch_ns_sw": 0,
+        "patch_fx_type_slot4": "Slow Gear",
+        "patch_fx_detail_slowgear_sens_slot4": 50, "patch_fx_detail_slowgear_rise_time_slot4": 55,
+        "patch_fx_detail_slowgear_level_slot4": 60,
+        "patch_delay_type_slot1": "Digital", "patch_delay_time_slot1": 480, "patch_delay_feedback_slot1": 40,
+        "patch_delay_effect_level_slot1": 30, "patch_delay_high_cut_slot1": 8, "patch_delay_mod_sw_slot1": 0,
+        "patch_reverb_type_slot1": "Hall", "patch_reverb_time_slot1": 65,
+        "patch_reverb_pre_delay_slot1": 30, "patch_reverb_effect_level_slot1": 36
+      }
+    }
+  ]
+}

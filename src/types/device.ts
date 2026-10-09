@@ -1,15 +1,21 @@
 export type ParamKind = "u8" | "i8" | "u16" | "enum" | "text";
+export type ParamEncoding = "integer1x7" | "integer2x4" | "integer2x7" | "integer4x4";
 
 export interface ParamDef {
   id: string;
   label: string;
   address: number[];
   kind: ParamKind;
+  encoding?: ParamEncoding;
   min?: number;
   max?: number;
   default?: number;
   group?: string;
   options?: string[];
+  wired?: boolean;
+  bts_name?: string;
+  address_space?: string;
+  offset?: number;
 }
 
 export interface ParamValue {
@@ -25,6 +31,11 @@ export interface PatchMeta {
   name?: string;
 }
 
+export interface ChannelInfo {
+  index: number;
+  label: string;
+}
+
 export interface Patch {
   meta: PatchMeta;
   params: Record<string, ParamValue>;
@@ -35,6 +46,7 @@ export interface ConnectionStatus {
   port_name?: string;
   device_model?: string;
   editor_mode: boolean;
+  emulated?: boolean;
 }
 
 export interface DeviceInfo {

@@ -11,6 +11,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "export:map": "node tools/export-bts-map.mjs",
+    "mcp:install": "npm install --prefix tools/mcp-server",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -20,6 +22,7 @@
     "clsx": "^2.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-resizable-panels": "^4.14.3",
     "tailwind-merge": "^3.3.1",
     "zustand": "^5.0.8"
   },
