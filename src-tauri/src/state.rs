@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use toneforge_core::address_map::ParamDef;
+use toneforge_core::address_map::{AddressMap, ParamDef, ParamKind};
 use toneforge_core::preset::{ParamValue, Patch, PresetFile};
 use toneforge_devices::{DeviceDriver, DeviceInfo, KatanaGen3Driver};
 use toneforge_library::ToneLibrary;
@@ -23,6 +23,8 @@ pub struct ConnectionStatus {
     pub port_name: Option<String>,
     pub device_model: Option<String>,
     pub editor_mode: bool,
+    #[serde(default)]
+    pub emulated: bool,
 }
 
 impl AppState {
@@ -72,6 +74,7 @@ impl AppState {
             port_name: Some(port_name),
             device_model: Some(inner.driver.device_model().to_string()),
             editor_mode: false,
+            emulated: inner.driver.is_emulated(),
         };
         Ok(())
     }
@@ -95,13 +98,40 @@ impl AppState {
         Ok(())
     }
 
-    pub fn apply_param_write(&self, param_id: &str, value: u8) -> Result<Patch, String> {
+    pub fn apply_param_write(&self, param_id: &str, value: i32) -> Result<Patch, String> {
         let mut inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
+        let kind = inner
+            .driver
+            .address_map()
+            .param_by_id(param_id)
+            .map(|p| p.kind)
+            .ok_or_else(|| format!("unknown param `{param_id}`"))?;
         let patch = inner
             .last_patch
             .as_mut()
             .ok_or_else(|| "no patch loaded; read from device first".to_string())?;
-        patch.set_param(param_id, ParamValue::from_u8(value));
+        let next_value = match kind {
+            ParamKind::U16 => {
+                let v = u16::try_from(value).map_err(|_| format!("invalid u16 value: {value}"))?;
+                ParamValue::U16 { value: v }
+            }
+            ParamKind::I8 => {
+                let v = i8::try_from(value).map_err(|_| format!("invalid i8 value: {value}"))?;
+                ParamValue::I8 { value: v }
+            }
+            ParamKind::Text => ParamValue::Text {
+                value: value.to_string(),
+            },
+            _ => {
+                if let Ok(v) = u8::try_from(value) {
+                    ParamValue::U8 { value: v }
+                } else {
+                    let v = i8::try_from(value).map_err(|_| format!("invalid i8 value: {value}"))?;
+                    ParamValue::I8 { value: v }
+                }
+            }
+        };
+        patch.set_param(param_id, next_value);
         Ok(patch.clone())
     }
 
@@ -120,6 +150,11 @@ impl AppState {
         Ok(inner.last_error.clone())
     }
 
+    pub fn with_address_map<R>(&self, f: impl FnOnce(&AddressMap) -> R) -> Result<R, String> {
+        let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
+        Ok(f(inner.driver.address_map()))
+    }
+
     pub fn editable_params(&self) -> Result<Vec<ParamDef>, String> {
         let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
         Ok(inner.driver.address_map().params.clone())
@@ -133,11 +168,6 @@ impl AppState {
         let inner = self.inner.lock().map_err(|_| "state lock poisoned".to_string())?;
         Ok(inner.driver.channels().to_vec())
     }
-}
-
-pub fn preset_to_json(patch: &Patch) -> Result<String, String> {
-    let preset = PresetFile::from_patch(patch.clone());
-    serde_json::to_string_pretty(&preset).map_err(|e| e.to_string())
 }
 
 pub fn preset_from_json(raw: &str) -> Result<PresetFile, String> {

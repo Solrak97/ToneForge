@@ -10,8 +10,8 @@ const CHANNEL_SELECT_SETTLE: Duration = Duration::from_millis(400);
 
 #[derive(Clone, serde::Serialize)]
 pub struct ConnectionChangedPayload {
-    status: crate::state::ConnectionStatus,
-    error: Option<String>,
+    pub status: crate::state::ConnectionStatus,
+    pub error: Option<String>,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -28,7 +28,7 @@ pub struct ChannelInfo {
 pub(crate) fn apply_patch_to_device(state: &AppState, patch: &Patch) -> Result<(), String> {
     let mut write_failures = 0usize;
     for (param_id, value) in &patch.params {
-        if let Some(v) = value.as_u8() {
+        if let Some(v) = value.as_i32() {
             match state.with_driver(|driver| driver.write_param(param_id, v)) {
                 Ok(()) => tracing::debug!(param_id = %param_id, value = v, "patch param written"),
                 Err(err) => {
@@ -41,6 +41,40 @@ pub(crate) fn apply_patch_to_device(state: &AppState, patch: &Patch) -> Result<(
     if write_failures > 0 {
         tracing::warn!(write_failures, "some patch params failed to write");
     }
+    Ok(())
+}
+
+/// Channel the amp is on right now, or `None` when it can't be asked.
+pub(crate) fn amp_channel(state: &AppState) -> Option<u8> {
+    state
+        .with_driver(|driver| driver.read_current_channel())
+        .ok()
+}
+
+/// Writes `patch` to the amp, switching to `channel` first when given, and tags the patch with
+/// the channel it now lives on.
+pub(crate) fn send_patch_to_amp(
+    state: &AppState,
+    patch: &mut Patch,
+    channel: Option<u8>,
+) -> Result<(), String> {
+    if !state.connection_status()?.connected {
+        return Err("connect to your Katana before sending a tone to the amp".to_string());
+    }
+    let target = match channel {
+        Some(channel) => {
+            if amp_channel(state) != Some(channel) {
+                tracing::info!(channel, "switching channel before sending tone");
+                state.with_driver(|driver| driver.select_channel(channel))?;
+                std::thread::sleep(CHANNEL_SELECT_SETTLE);
+            }
+            Some(channel)
+        }
+        None => amp_channel(state),
+    };
+    apply_patch_to_device(state, patch)?;
+    patch.meta.channel = target;
+    patch.meta.patch_slot = target;
     Ok(())
 }
 
@@ -147,6 +181,12 @@ pub fn get_connection_status(
     state.connection_status()
 }
 
+/// The last patch the backend read or wrote, without touching the device.
+#[tauri::command]
+pub fn get_cached_patch(state: State<AppState>) -> Result<Option<Patch>, String> {
+    state.last_patch()
+}
+
 #[tauri::command]
 pub fn read_patch(app: AppHandle, state: State<AppState>) -> Result<Patch, String> {
     tracing::debug!("read_patch");
@@ -173,7 +213,7 @@ pub fn set_param(
     app: AppHandle,
     state: State<AppState>,
     param_id: String,
-    value: u8,
+    value: i32,
 ) -> Result<Patch, String> {
     tracing::info!(param_id = %param_id, value, "set_param");
     state.with_driver(|driver| driver.write_param(&param_id, value))?;
@@ -181,37 +221,6 @@ pub fn set_param(
 
     let patch = state.apply_param_write(&param_id, value)?;
 
-    if let Err(e) = app.emit(
-        "patch-updated",
-        PatchUpdatedPayload {
-            patch: patch.clone(),
-        },
-    ) {
-        tracing::warn!(error = %e, "failed to emit patch-updated");
-    }
-    Ok(patch)
-}
-
-#[tauri::command]
-pub fn save_preset(state: State<AppState>, path: String) -> Result<(), String> {
-    tracing::info!(path = %path, "save_preset");
-    let patch = state
-        .last_patch()?
-        .ok_or_else(|| "no patch loaded; read from device first".to_string())?;
-    let json = crate::state::preset_to_json(&patch)?;
-    std::fs::write(&path, json).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub fn load_preset(app: AppHandle, state: State<AppState>, path: String) -> Result<Patch, String> {
-    tracing::info!(path = %path, "load_preset");
-    let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    let preset = crate::state::preset_from_json(&raw)?;
-    let patch = preset.patch;
-
-    apply_patch_to_device(&state, &patch)?;
-
-    state.set_patch(patch.clone())?;
     if let Err(e) = app.emit(
         "patch-updated",
         PatchUpdatedPayload {
