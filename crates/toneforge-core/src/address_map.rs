@@ -11,6 +11,15 @@ pub enum ParamKind {
     Text,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ParamEncoding {
+    Integer1x7,
+    Integer2x4,
+    Integer2x7,
+    Integer4x4,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ParamDef {
     pub id: String,
@@ -18,6 +27,8 @@ pub struct ParamDef {
     #[serde(deserialize_with = "deserialize_address")]
     pub address: [u8; 4],
     pub kind: ParamKind,
+    #[serde(default = "default_param_encoding")]
+    pub encoding: ParamEncoding,
     #[serde(default)]
     pub min: Option<i32>,
     #[serde(default)]
@@ -37,6 +48,9 @@ pub struct ParamDef {
     /// Memory region: live_panel, patch_memory, etc.
     #[serde(default)]
     pub address_space: Option<String>,
+    /// Display offset used by BTS UIs (display value = raw + offset).
+    #[serde(default)]
+    pub offset: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -123,6 +137,8 @@ impl AddressMap {
             label: String,
             address: String,
             kind: ParamKind,
+            #[serde(default = "default_param_encoding")]
+            encoding: ParamEncoding,
             #[serde(default)]
             min: Option<i32>,
             #[serde(default)]
@@ -133,6 +149,8 @@ impl AddressMap {
             group: Option<String>,
             #[serde(default)]
             options: Vec<String>,
+            #[serde(default)]
+            offset: i32,
         }
 
         let export: ExportRoot = serde_json::from_str(raw)?;
@@ -165,6 +183,7 @@ impl AddressMap {
                         label: p.label,
                         address: parse_address(&p.address)?,
                         kind: p.kind,
+                        encoding: p.encoding,
                         min: p.min,
                         max: p.max,
                         default: p.default,
@@ -173,6 +192,7 @@ impl AddressMap {
                         wired: true,
                         bts_name: None,
                         address_space: None,
+                        offset: p.offset,
                     })
                 })
                 .collect::<Result<Vec<_>, CoreError>>()?,
@@ -182,6 +202,10 @@ impl AddressMap {
 
 fn default_patch_select_address() -> [u8; 4] {
     [0x7F, 0x00, 0x01, 0x00]
+}
+
+fn default_param_encoding() -> ParamEncoding {
+    ParamEncoding::Integer1x7
 }
 
 fn default_channel_count() -> u8 {

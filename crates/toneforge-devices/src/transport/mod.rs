@@ -231,7 +231,7 @@ fn parse_identity_model_code(response: &[u8]) -> Option<u8> {
     response.get(10).copied()
 }
 
-fn hex_sysex(data: &[u8]) -> String {
+pub(crate) fn hex_sysex(data: &[u8]) -> String {
     data.iter()
         .map(|b| format!("{b:02X}"))
         .collect::<Vec<_>>()

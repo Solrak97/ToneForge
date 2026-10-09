@@ -157,6 +157,38 @@ impl RolandSysExCodec {
         }
         Some((bytes[0] << 4) | (bytes[1] & 0x0F))
     }
+
+    pub fn encode_integer2x7(value: u16) -> [u8; 2] {
+        [((value >> 7) & 0x7F) as u8, (value & 0x7F) as u8]
+    }
+
+    pub fn decode_integer2x7(bytes: &[u8]) -> Option<u16> {
+        if bytes.len() < 2 {
+            return None;
+        }
+        Some(((bytes[0] as u16) << 7) | (bytes[1] as u16))
+    }
+
+    pub fn encode_integer4x4(value: u16) -> [u8; 4] {
+        [
+            ((value >> 12) & 0x0F) as u8,
+            ((value >> 8) & 0x0F) as u8,
+            ((value >> 4) & 0x0F) as u8,
+            (value & 0x0F) as u8,
+        ]
+    }
+
+    pub fn decode_integer4x4(bytes: &[u8]) -> Option<u16> {
+        if bytes.len() < 4 {
+            return None;
+        }
+        Some(
+            ((bytes[0] as u16) << 12)
+                | ((bytes[1] as u16) << 8)
+                | ((bytes[2] as u16) << 4)
+                | (bytes[3] as u16),
+        )
+    }
 }
 
 /// Reassembles chunked Roland SysEx responses (~241 bytes payload per chunk).
@@ -279,6 +311,30 @@ mod tests {
         assert_eq!(RolandSysExCodec::encode_integer2x4(9), [0x00, 0x09]);
         assert_eq!(RolandSysExCodec::encode_integer2x4(10), [0x00, 0x0A]);
         assert_eq!(RolandSysExCodec::encode_integer2x4(16), [0x01, 0x00]);
+    }
+
+    #[test]
+    fn integer2x7_roundtrip() {
+        let values = [0u16, 1, 127, 128, 255, 500, 2000, 16383];
+        for value in values {
+            let encoded = RolandSysExCodec::encode_integer2x7(value);
+            assert_eq!(
+                RolandSysExCodec::decode_integer2x7(&encoded),
+                Some(value)
+            );
+        }
+    }
+
+    #[test]
+    fn integer4x4_roundtrip() {
+        let values = [0u16, 1, 127, 255, 1024, 4095, 65535];
+        for value in values {
+            let encoded = RolandSysExCodec::encode_integer4x4(value);
+            assert_eq!(
+                RolandSysExCodec::decode_integer4x4(&encoded),
+                Some(value)
+            );
+        }
     }
 
     #[test]

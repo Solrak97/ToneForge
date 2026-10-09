@@ -26,6 +26,12 @@ const INTEGER1x7 = 0x10006;
 const INTEGER2x4 = 0x10007;
 const INTEGER2x7 = 0x1000b;
 const INTEGER4x4 = 0x10008;
+const INTEGER_ENCODING = {
+  [INTEGER1x7]: "integer1x7",
+  [INTEGER2x4]: "integer2x4",
+  [INTEGER2x7]: "integer2x7",
+  [INTEGER4x4]: "integer4x4",
+};
 
 function toSysexAddressHex(absAddr) {
   const a = absAddr >>> 0;
@@ -51,6 +57,89 @@ function kindFromSize(size) {
 
 const ENUM_OPTIONS = {
   PRMID_PATCH_AMP_TYPE: ["Acoustic", "Clean", "Pushed", "Crunch", "Lead", "Brown"],
+  PRMID_PATCH_BOOSTER_TYPE: [
+    "Mid Boost",
+    "Clean Boost",
+    "Treble Boost",
+    "Crunch OD",
+    "Natural OD",
+    "Warm OD",
+    "Fat DS",
+    "Metal DS",
+    "Oct Fuzz",
+    "Blues Drive",
+    "Overdrive",
+    "T-Scream",
+    "Turbo OD",
+    "Distortion",
+    "RAT",
+    "GUV DS",
+    "DST+",
+    "Metal Zone",
+    "'60s Fuzz",
+    "Muff Fuzz",
+    "HM-2",
+    "Metal Core",
+    "Centa OD",
+  ],
+  PRMID_PATCH_FX_TYPE: [
+    "T.Wah",
+    "Auto Wah",
+    "Pedal Wah",
+    "Comp",
+    "Limiter",
+    "Graphic EQ",
+    "Parametric EQ",
+    "Guitar Sim",
+    "Slow Gear",
+    "Wave Synth",
+    "Octave",
+    "Pitch Shifter",
+    "Harmonist",
+    "AC Processor",
+    "Phaser",
+    "Flanger",
+    "Tremolo",
+    "Rotary",
+    "Uni-V",
+    "Slicer",
+    "Vibrato",
+    "Ring Mod",
+    "Humanizer",
+    "Chorus",
+    "AC Guitar Sim",
+    "Phaser 90E",
+    "Flanger 117E",
+    "Wah 95E",
+    "DC-30",
+    "Heavy Octave",
+    "Pedal Bend",
+  ],
+  PRMID_PATCH_DELAY_TYPE: [
+    "Digital",
+    "Pan",
+    "Stereo",
+    "Analog",
+    "Tape Echo",
+    "Reverse",
+    "Modulate",
+    "SDE-3000",
+  ],
+  PRMID_PATCH_REVERB_TYPE: ["Plate", "Room", "Hall", "Spring", "Modulate"],
+  PRMID_PATCH_DELAY_MODE: ["Normal", "Inverse"],
+  PRMID_PATCH_REVERB_MODE: ["Normal", "Inverse"],
+  PRMID_PATCH_REVERB_LAYER_MODE: ["Delay 2", "Delay 2 + Reverb", "Reverb"],
+  PRMID_PATCH_OTHER_CHAIN: [
+    "Chain1",
+    "Chain2-1",
+    "Chain3-1",
+    "Chain4-1",
+    "Chain2-2",
+    "Chain3-2",
+    "Chain4-2",
+    "Chain5",
+    "Chain6",
+  ],
   PRMID_PATCH_COLOR_BOOSTER_COLOR: ["Green", "Red", "Yellow"],
   PRMID_PATCH_COLOR_MOD_COLOR: ["Green", "Red", "Yellow"],
   PRMID_PATCH_COLOR_FX_COLOR: ["Green", "Red", "Yellow"],
@@ -103,27 +192,9 @@ function groupFromPath(pathParts) {
   return "other";
 }
 
-const WIRED_BLOCK_PATTERNS = [
-  /^AMP$/,
-  /^SW$/,
-  /^COLOR$/,
-  /^OTHER$/,
-  /^COM$/,
-  /^BOOSTER\(1\)$/,
-  /^FX\(1\)$/,
-  /^FX\(4\)$/,
-  /^DELAY\(1\)$/,
-  /^REVERB\(1\)$/,
-];
-
-function isWired(pathParts, entry) {
-  if (entry.kind !== "u8" && entry.kind !== "enum") return false;
-  if (entry.offset !== 0) return false;
-  const block = pathParts[pathParts.length - 1] ?? "";
+function isWired(_pathParts, entry) {
   if (entry.kind === "text") return false;
-  if (block.includes("FX_DETAIL")) return false;
-  if (block.includes("ASSIGN")) return false;
-  return WIRED_BLOCK_PATTERNS.some((re) => re.test(block));
+  return true;
 }
 
 function labelFromName(btsName) {
@@ -201,6 +272,7 @@ function flattenPanelParams(nodes, tables, baseAddr = 0x20000000, pathParts = []
           label: labelFromName(leaf.name),
           address: toSysexAddressHex(absParam),
           kind,
+          encoding: INTEGER_ENCODING[leaf.size] ?? "integer1x7",
           min: leaf.min,
           max: leaf.max,
           default: typeof leaf.init === "number" ? leaf.init : undefined,

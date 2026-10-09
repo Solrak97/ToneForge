@@ -10,6 +10,8 @@ pub enum CoreError {
     AddressMapParse(String),
     #[error("parameter not found: {0}")]
     ParamNotFound(String),
+    #[error("liveset error: {0}")]
+    Tsl(String),
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
     #[error("io error: {0}")]

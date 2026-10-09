@@ -11,6 +11,15 @@ pub enum ParamValue {
 }
 
 impl ParamValue {
+    pub fn as_i32(&self) -> Option<i32> {
+        match self {
+            Self::U8 { value } => Some(i32::from(*value)),
+            Self::I8 { value } => Some(i32::from(*value)),
+            Self::U16 { value } => Some(i32::from(*value)),
+            Self::Text { .. } => None,
+        }
+    }
+
     pub fn as_u8(&self) -> Option<u8> {
         match self {
             Self::U8 { value } => Some(*value),

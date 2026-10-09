@@ -22,9 +22,9 @@ pub trait DeviceDriver: Send {
 
     fn read_current_patch(&mut self) -> Result<Patch, DeviceError>;
 
-    fn read_param(&mut self, param_id: &str) -> Result<u8, DeviceError>;
+    fn read_param(&mut self, param_id: &str) -> Result<i32, DeviceError>;
 
-    fn write_param(&mut self, param_id: &str, value: u8) -> Result<(), DeviceError>;
+    fn write_param(&mut self, param_id: &str, value: i32) -> Result<(), DeviceError>;
 
     fn read_current_channel(&mut self) -> Result<u8, DeviceError>;
 

@@ -4,4 +4,6 @@ mod models;
 
 pub use db::ToneLibrary;
 pub use error::LibraryError;
-pub use models::{SaveToneRequest, ToneRecord, ToneSummary};
+pub use models::{
+    LiveSetRecord, LiveSetSummary, NewTone, SaveToneRequest, ToneRecord, ToneSummary,
+};

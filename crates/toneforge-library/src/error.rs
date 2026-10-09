@@ -4,6 +4,8 @@ use thiserror::Error;
 pub enum LibraryError {
     #[error("tone not found: {0}")]
     NotFound(i64),
+    #[error("liveset not found: {0}")]
+    LiveSetNotFound(i64),
     #[error("invalid tone name")]
     InvalidName,
     #[error("database error: {0}")]
