@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Button } from "./button";
+import { createPortal } from "react-dom";
+import { CloseIcon, IconButton } from "./icons";
 import { cn } from "../../lib/utils";
 
 export function Modal({
@@ -21,7 +22,7 @@ export function Modal({
 }) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
@@ -44,9 +45,9 @@ export function Modal({
             <p className="text-sm font-semibold text-zinc-100 truncate">{title}</p>
             {description && <p className="mt-1 text-xs text-zinc-500">{description}</p>}
           </div>
-          <Button variant="ghost" onClick={onClose} className="shrink-0">
-            Close
-          </Button>
+          <IconButton label="Close" onClick={onClose} className="-mr-2 -mt-1 shrink-0">
+            <CloseIcon className="h-5 w-5" />
+          </IconButton>
         </div>
 
         <div className="px-4 py-4">{children}</div>
@@ -55,7 +56,8 @@ export function Modal({
           <div className="border-t border-zinc-800 px-4 py-3">{footer}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -1,0 +1,29 @@
+---
+description: Side-by-side form controls must have the same size
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Matching control sizes
+
+Controls placed next to each other (in the same row or grid row) must render at the same
+height and visual weight: dropdown next to text box, input next to button, etc.
+
+- Single-line `<input>` and `<select>` use `fieldClass` from `src/components/ui/field.ts`
+  (explicit `h-9`). Never size them with vertical padding alone: the Tauri WebKit webview
+  ignores `py-*` on native selects, so they end up thinner than inputs.
+- `<textarea>` uses `textAreaClass`.
+- Buttons beside a field in the same row match the field height (`h-9`).
+- Controls in the same grid row also share width rules (`w-full` in equal columns), and
+  labels above them use the same text style so the fields line up.
+- When adding a new control style, update `field.ts` rather than inlining one-off classes.
+
+```tsx
+// ❌ BAD: select renders shorter than the input next to it
+<select className="rounded-md border px-2 py-1.5" />
+<input className="rounded-md border px-2 py-1.5" />
+
+// ✅ GOOD
+<select className={fieldClass} />
+<input className={fieldClass} />
+```

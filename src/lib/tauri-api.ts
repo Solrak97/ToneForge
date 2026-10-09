@@ -2,7 +2,15 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { ConnectionStatus, DeviceInfo, ParamDef, Patch, ChannelInfo } from "../types/device";
-import type { SaveToneRequest, ToneRecord, ToneSummary } from "../types/library";
+import type {
+  LibraryImport,
+  LiveSetRecord,
+  LiveSetSummary,
+  SaveToneRequest,
+  ToneRecord,
+  ToneSummary,
+} from "../types/library";
+import type { AgentSettings } from "../types/agent";
 import type { DebugLogEntry, LogLevel } from "../stores/debugLog";
 
 async function loggedInvoke<T>(label: string, fn: () => Promise<T>): Promise<T> {
@@ -35,6 +43,10 @@ export async function getConnectionStatus(): Promise<ConnectionStatus> {
   return invoke<ConnectionStatus>("get_connection_status");
 }
 
+export async function getCachedPatch(): Promise<Patch | null> {
+  return invoke<Patch | null>("get_cached_patch");
+}
+
 export async function readPatch(): Promise<Patch> {
   return loggedInvoke("readPatch", () => invoke<Patch>("read_patch"));
 }
@@ -59,28 +71,37 @@ export async function listEditableParams(): Promise<ParamDef[]> {
   return invoke<ParamDef[]>("list_editable_params");
 }
 
+export async function getDevMode(): Promise<boolean> {
+  return invoke<boolean>("get_dev_mode");
+}
+
+export async function setDevMode(enabled: boolean): Promise<boolean> {
+  return loggedInvoke(`setDevMode(${enabled})`, () => invoke<boolean>("set_dev_mode", { enabled }));
+}
+
 export async function getLogPath(): Promise<string> {
   return invoke<string>("get_log_path");
 }
 
-export async function savePresetToDialog(): Promise<void> {
-  const path = await save({
-    filters: [{ name: "ToneForge Preset", extensions: ["json"] }],
-    defaultPath: "preset.json",
-  });
-  if (!path) return;
-  await invoke("save_preset", { path });
+const TSL_FILTER = { name: "BOSS TONE STUDIO liveset", extensions: ["tsl"] };
+const OPEN_FILTERS = [
+  { name: "Liveset or preset", extensions: ["tsl", "json"] },
+  TSL_FILTER,
+  { name: "ToneForge preset (legacy)", extensions: ["json"] },
+];
+
+function tslFileName(name: string): string {
+  const safe = name.replace(/[\\/:*?"<>|]+/g, " ").trim();
+  return `${safe || "liveset"}.tsl`;
 }
 
-export async function loadPresetFromDialog(): Promise<Patch> {
-  const path = await open({
-    filters: [{ name: "ToneForge Preset", extensions: ["json"] }],
-    multiple: false,
-  });
-  if (!path || Array.isArray(path)) {
-    throw new Error("No preset selected");
-  }
-  return invoke<Patch>("load_preset", { path });
+async function pickTslSavePath(name: string): Promise<string | null> {
+  return save({ filters: [TSL_FILTER], defaultPath: tslFileName(name) });
+}
+
+async function pickOpenPath(): Promise<string | null> {
+  const path = await open({ filters: OPEN_FILTERS, multiple: false });
+  return path && !Array.isArray(path) ? path : null;
 }
 
 export async function listLibraryTones(query?: string): Promise<ToneSummary[]> {
@@ -97,26 +118,72 @@ export async function importLibraryToneFromAmp(request: SaveToneRequest): Promis
   );
 }
 
-export async function importLibraryToneFromFile(
-  path: string,
-  request: SaveToneRequest,
-): Promise<ToneRecord> {
-  return loggedInvoke("importLibraryToneFromFile", () =>
-    invoke<ToneRecord>("import_library_tone_from_file", { path, request }),
+/** Imports a `.tsl` (one tone, or a whole liveset) or a legacy JSON preset. */
+export async function importLibraryFileFromDialog(): Promise<LibraryImport | null> {
+  const path = await pickOpenPath();
+  if (!path) return null;
+  return loggedInvoke("importLibraryFile", () =>
+    invoke<LibraryImport>("import_library_file", { path }),
   );
 }
 
-export async function importLibraryToneFromDialog(
-  request: SaveToneRequest,
-): Promise<ToneRecord | null> {
-  const path = await open({
-    filters: [{ name: "ToneForge Preset", extensions: ["json"] }],
-    multiple: false,
-  });
-  if (!path || Array.isArray(path)) {
-    return null;
-  }
-  return importLibraryToneFromFile(path, request);
+export async function exportLibraryToneToDialog(id: number, name: string): Promise<boolean> {
+  const path = await pickTslSavePath(name);
+  if (!path) return false;
+  await loggedInvoke(`exportLibraryTone(${id})`, () =>
+    invoke("export_library_tone", { id, path }),
+  );
+  return true;
+}
+
+export async function exportLivesetToDialog(id: number, name: string): Promise<boolean> {
+  const path = await pickTslSavePath(name);
+  if (!path) return false;
+  await loggedInvoke(`exportLiveset(${id})`, () => invoke("export_liveset", { id, path }));
+  return true;
+}
+
+export async function listLivesets(): Promise<LiveSetSummary[]> {
+  return invoke<LiveSetSummary[]>("list_livesets");
+}
+
+export async function getLiveset(id: number): Promise<LiveSetRecord> {
+  return invoke<LiveSetRecord>("get_liveset", { id });
+}
+
+export async function createLiveset(name: string): Promise<LiveSetRecord> {
+  return loggedInvoke(`createLiveset(${name})`, () =>
+    invoke<LiveSetRecord>("create_liveset", { name }),
+  );
+}
+
+export async function renameLiveset(id: number, name: string): Promise<LiveSetRecord> {
+  return loggedInvoke(`renameLiveset(${id})`, () =>
+    invoke<LiveSetRecord>("rename_liveset", { id, name }),
+  );
+}
+
+export async function deleteLiveset(id: number): Promise<void> {
+  return loggedInvoke(`deleteLiveset(${id})`, () => invoke("delete_liveset", { id }));
+}
+
+export async function addToneToLiveset(livesetId: number, toneId: number): Promise<LiveSetRecord> {
+  return loggedInvoke(`addToneToLiveset(${livesetId}, ${toneId})`, () =>
+    invoke<LiveSetRecord>("add_tone_to_liveset", { livesetId, toneId }),
+  );
+}
+
+export async function removeToneFromLiveset(
+  livesetId: number,
+  toneId: number,
+): Promise<LiveSetRecord> {
+  return loggedInvoke(`removeToneFromLiveset(${livesetId}, ${toneId})`, () =>
+    invoke<LiveSetRecord>("remove_tone_from_liveset", { livesetId, toneId }),
+  );
+}
+
+export async function reorderLiveset(livesetId: number, toneIds: number[]): Promise<LiveSetRecord> {
+  return invoke<LiveSetRecord>("reorder_liveset", { livesetId, toneIds });
 }
 
 export async function saveLibraryTone(request: SaveToneRequest): Promise<ToneRecord> {
@@ -125,9 +192,20 @@ export async function saveLibraryTone(request: SaveToneRequest): Promise<ToneRec
   );
 }
 
-export async function loadLibraryTone(id: number, writeToDevice: boolean): Promise<Patch> {
+export async function updateLibraryTonePatch(id: number, patch: Patch): Promise<ToneRecord> {
+  return loggedInvoke(`updateLibraryTonePatch(${id})`, () =>
+    invoke<ToneRecord>("update_library_tone_patch", { id, patch }),
+  );
+}
+
+/** `channel` switches the amp to that channel before writing; defaults to the current one. */
+export async function loadLibraryTone(
+  id: number,
+  writeToDevice: boolean,
+  channel?: number,
+): Promise<Patch> {
   return loggedInvoke(`loadLibraryTone(${id})`, () =>
-    invoke<Patch>("load_library_tone", { id, writeToDevice }),
+    invoke<Patch>("load_library_tone", { id, writeToDevice, channel: channel ?? null }),
   );
 }
 
@@ -145,6 +223,10 @@ export async function renameLibraryTone(id: number, name: string): Promise<ToneR
 
 export async function getLibraryDbPath(): Promise<string> {
   return invoke<string>("get_library_db_path");
+}
+
+export async function seedLibraryDemoTones(): Promise<number> {
+  return loggedInvoke("seedLibraryDemoTones", () => invoke<number>("seed_library_demo_tones"));
 }
 
 export function subscribeDeviceEvents(
@@ -191,4 +273,76 @@ function normalizeLogLevel(level: string): LogLevel {
     return level;
   }
   return "info";
+}
+
+// --- Agent ---
+
+export async function getAgentSettings(): Promise<AgentSettings> {
+  return invoke<AgentSettings>("get_agent_settings");
+}
+
+export async function setAgentSettings(settings: AgentSettings): Promise<AgentSettings> {
+  return loggedInvoke("setAgentSettings", () =>
+    invoke<AgentSettings>("set_agent_settings", { settings }),
+  );
+}
+
+export async function agentChat(
+  messages: Array<{ role: string; content: string }>,
+): Promise<string> {
+  return loggedInvoke("agentChat", () =>
+    invoke<string>("agent_chat", { request: { messages } }),
+  );
+}
+
+export async function agentCancel(): Promise<void> {
+  return invoke("agent_cancel");
+}
+
+export async function agentReset(): Promise<void> {
+  return invoke("agent_reset");
+}
+
+export function subscribeAgentEvents(handlers: {
+  onToken?: (payload: { run_id: string; text: string }) => void;
+  onTool?: (payload: {
+    run_id: string;
+    name: string;
+    arguments: unknown;
+    result_summary: string;
+    ok: boolean;
+  }) => void;
+  onDone?: (payload: { run_id: string; provider: string; message: string }) => void;
+  onError?: (payload: { run_id: string; error: string }) => void;
+}): () => void {
+  const unsubs: Array<() => void> = [];
+
+  if (handlers.onToken) {
+    listen<{ run_id: string; text: string }>("agent-token", (e) => {
+      handlers.onToken?.(e.payload);
+    }).then((u) => unsubs.push(u));
+  }
+  if (handlers.onTool) {
+    listen<{
+      run_id: string;
+      name: string;
+      arguments: unknown;
+      result_summary: string;
+      ok: boolean;
+    }>("agent-tool", (e) => {
+      handlers.onTool?.(e.payload);
+    }).then((u) => unsubs.push(u));
+  }
+  if (handlers.onDone) {
+    listen<{ run_id: string; provider: string; message: string }>("agent-done", (e) => {
+      handlers.onDone?.(e.payload);
+    }).then((u) => unsubs.push(u));
+  }
+  if (handlers.onError) {
+    listen<{ run_id: string; error: string }>("agent-error", (e) => {
+      handlers.onError?.(e.payload);
+    }).then((u) => unsubs.push(u));
+  }
+
+  return () => unsubs.forEach((fn) => fn());
 }
